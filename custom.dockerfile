@@ -16,7 +16,7 @@ WORKDIR /build
 # 需要启用Docker的BuildKit功能
 RUN --mount=type=cache,id=m2_cache,sharing=locked,target=/root/.m2 mvn clean package -X -D skipTests -s custom.settings.xml
 FROM amazoncorretto:11-alpine3.19
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk add --no-cache fontconfig ttf-freefont ffmpeg
+# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk add --no-cache fontconfig ttf-freefont ffmpeg
 RUN adduser -S -u 9528 app
 USER app
 WORKDIR /app
