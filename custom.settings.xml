@@ -157,59 +157,11 @@ under the License.
     </mirror>
      -->
     <mirror>
-      <id>hlzt-http-unblocker</id>
-      <mirrorOf>hlzt-public</mirrorOf>
-      <name>华龙智腾公共本地仓库</name>
-      <url>http://192.168.3.3:10240/repository/hlzt-public/</url>
+      <id>maven-public</id>
+      <mirrorOf>central,jcenter,gradle-plugin,apache-snapshots</mirrorOf>
+      <name>华龙智腾本地仓库</name>
+      <url>http://192.168.3.248/repository/maven-public/</url>
       <blocked>false</blocked>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-central</id>
-      <mirrorOf>central</mirrorOf>
-      <name>central</name>
-      <url>https://maven.aliyun.com/repository/central</url>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-jcenter</id>
-      <mirrorOf>jcenter</mirrorOf>
-      <name>jcenter</name>
-      <url>https://maven.aliyun.com/repository/public</url>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-google</id>
-      <mirrorOf>google</mirrorOf>
-      <name>google</name>
-      <url>https://maven.aliyun.com/repository/google</url>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-gradle-plugin</id>
-      <mirrorOf>gradle-plugin</mirrorOf>
-      <name>gradle-plugin</name>
-      <url>https://maven.aliyun.com/repository/gradle-plugin</url>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-spring</id>
-      <mirrorOf>spring</mirrorOf>
-      <name>spring</name>
-      <url>https://maven.aliyun.com/repository/spring</url>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-spring-plugin</id>
-      <mirrorOf>spring-plugin</mirrorOf>
-      <name>spring-plugin</name>
-      <url>https://maven.aliyun.com/repository/spring-plugin</url>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-grails-core</id>
-      <mirrorOf>grails-core</mirrorOf>
-      <name>grails-core</name>
-      <url>https://maven.aliyun.com/repository/grails-core</url>
-    </mirror>
-    <mirror>
-      <id>aliyunmaven-apache-snapshots</id>
-      <mirrorOf>apache-snapshots</mirrorOf>
-      <name>apache-snapshots</name>
-      <url>https://maven.aliyun.com/repository/apache-snapshots</url>
     </mirror>
   </mirrors>
 
