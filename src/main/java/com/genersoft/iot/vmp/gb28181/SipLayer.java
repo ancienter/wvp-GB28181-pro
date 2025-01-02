@@ -7,8 +7,7 @@ import com.genersoft.iot.vmp.gb28181.conf.DefaultProperties;
 import com.genersoft.iot.vmp.gb28181.transmit.ISIPProcessorObserver;
 import gov.nist.javax.sip.SipProviderImpl;
 import gov.nist.javax.sip.SipStackImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
@@ -16,14 +15,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import javax.sip.*;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 @Order(value=10)
 public class SipLayer implements CommandLineRunner {
-
-	private final static Logger logger = LoggerFactory.getLogger(SipLayer.class);
 
 	@Autowired
 	private SipConfig sipConfig;
@@ -36,19 +37,52 @@ public class SipLayer implements CommandLineRunner {
 
 	private final Map<String, SipProviderImpl> tcpSipProviderMap = new ConcurrentHashMap<>();
 	private final Map<String, SipProviderImpl> udpSipProviderMap = new ConcurrentHashMap<>();
+	private final List<String> monitorIps = new ArrayList<>();
 
 	@Override
 	public void run(String... args) {
-		List<String> monitorIps = new ArrayList<>();
-		// 使用逗号分割多个ip
-		String separator = ",";
-		if (sipConfig.getIp().indexOf(separator) > 0) {
-			String[] split = sipConfig.getIp().split(separator);
-			monitorIps.addAll(Arrays.asList(split));
+		if (ObjectUtils.isEmpty(sipConfig.getIp())) {
+			try {
+				// 获得本机的所有网络接口
+				Enumeration<NetworkInterface> nifs = NetworkInterface.getNetworkInterfaces();
+				while (nifs.hasMoreElements()) {
+					NetworkInterface nif = nifs.nextElement();
+					// 获得与该网络接口绑定的 IP 地址，一般只有一个
+					Enumeration<InetAddress> addresses = nif.getInetAddresses();
+					while (addresses.hasMoreElements()) {
+						InetAddress addr = addresses.nextElement();
+						if (addr instanceof Inet4Address) {
+							if (addr.getHostAddress().equals("127.0.0.1")){
+								continue;
+							}
+							if (nif.getName().startsWith("docker")) {
+								continue;
+							}
+							log.info("[自动配置SIP监听网卡] 网卡接口地址： {}", addr.getHostAddress());// 只关心 IPv4 地址
+							monitorIps.add(addr.getHostAddress());
+						}
+					}
+				}
+			}catch (Exception e) {
+				log.error("[读取网卡信息失败]", e);
+			}
+			if (monitorIps.isEmpty()) {
+				log.error("[自动配置SIP监听网卡信息失败]， 请手动配置SIP.IP后重新启动");
+				System.exit(1);
+			}
 		}else {
-			monitorIps.add(sipConfig.getIp());
+			// 使用逗号分割多个ip
+			String separator = ",";
+			if (sipConfig.getIp().indexOf(separator) > 0) {
+				String[] split = sipConfig.getIp().split(separator);
+				monitorIps.addAll(Arrays.asList(split));
+			}else {
+				monitorIps.add(sipConfig.getIp());
+			}
 		}
-
+		if (ObjectUtils.isEmpty(sipConfig.getShowIp())){
+			sipConfig.setShowIp(String.join(",", monitorIps));
+		}
 		SipFactory.getInstance().setPathName("gov.nist");
 		if (monitorIps.size() > 0) {
 			for (String monitorIp : monitorIps) {
@@ -66,7 +100,7 @@ public class SipLayer implements CommandLineRunner {
 			sipStack = (SipStackImpl)SipFactory.getInstance().createSipStack(DefaultProperties.getProperties("GB28181_SIP", userSetting.getSipLog()));
 			sipStack.setMessageParserFactory(new GbStringMsgParserFactory());
 		} catch (PeerUnavailableException e) {
-			logger.error("[SIP SERVER] SIP服务启动失败， 监听地址{}失败,请检查ip是否正确", monitorIp);
+			log.error("[SIP SERVER] SIP服务启动失败， 监听地址{}失败,请检查ip是否正确", monitorIp);
 			return;
 		}
 
@@ -77,12 +111,12 @@ public class SipLayer implements CommandLineRunner {
 			tcpSipProvider.setDialogErrorsAutomaticallyHandled();
 			tcpSipProvider.addSipListener(sipProcessorObserver);
 			tcpSipProviderMap.put(monitorIp, tcpSipProvider);
-			logger.info("[SIP SERVER] tcp://{}:{} 启动成功", monitorIp, port);
+			log.info("[SIP SERVER] tcp://{}:{} 启动成功", monitorIp, port);
 		} catch (TransportNotSupportedException
 				 | TooManyListenersException
 				 | ObjectInUseException
 				 | InvalidArgumentException e) {
-			logger.error("[SIP SERVER] tcp://{}:{} SIP服务启动失败,请检查端口是否被占用或者ip是否正确"
+			log.error("[SIP SERVER] tcp://{}:{} SIP服务启动失败,请检查端口是否被占用或者ip是否正确"
 					, monitorIp, port);
 		}
 
@@ -91,20 +125,23 @@ public class SipLayer implements CommandLineRunner {
 
 			SipProviderImpl udpSipProvider = (SipProviderImpl)sipStack.createSipProvider(udpListeningPoint);
 			udpSipProvider.addSipListener(sipProcessorObserver);
-
+			udpSipProvider.setDialogErrorsAutomaticallyHandled();
 			udpSipProviderMap.put(monitorIp, udpSipProvider);
 
-			logger.info("[SIP SERVER] udp://{}:{} 启动成功", monitorIp, port);
+			log.info("[SIP SERVER] udp://{}:{} 启动成功", monitorIp, port);
 		} catch (TransportNotSupportedException
 				 | TooManyListenersException
 				 | ObjectInUseException
 				 | InvalidArgumentException e) {
-			logger.error("[SIP SERVER] udp://{}:{} SIP服务启动失败,请检查端口是否被占用或者ip是否正确"
+			log.error("[SIP SERVER] udp://{}:{} SIP服务启动失败,请检查端口是否被占用或者ip是否正确"
 					, monitorIp, port);
 		}
 	}
 
 	public SipProviderImpl getUdpSipProvider(String ip) {
+		if (udpSipProviderMap.size() == 1) {
+			return udpSipProviderMap.values().stream().findFirst().get();
+		}
 		if (ObjectUtils.isEmpty(ip)) {
 			return null;
 		}
@@ -126,6 +163,9 @@ public class SipLayer implements CommandLineRunner {
 	}
 
 	public SipProviderImpl getTcpSipProvider(String ip) {
+		if (tcpSipProviderMap.size() == 1) {
+			return tcpSipProviderMap.values().stream().findFirst().get();
+		}
 		if (ObjectUtils.isEmpty(ip)) {
 			return null;
 		}
@@ -133,6 +173,9 @@ public class SipLayer implements CommandLineRunner {
 	}
 
 	public String getLocalIp(String deviceLocalIp) {
+		if (monitorIps.size() == 1) {
+			return monitorIps.get(0);
+		}
 		if (!ObjectUtils.isEmpty(deviceLocalIp)) {
 			return deviceLocalIp;
 		}

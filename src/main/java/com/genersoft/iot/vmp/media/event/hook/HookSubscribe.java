@@ -6,6 +6,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +22,7 @@ public class HookSubscribe {
      * 订阅数据过期时间
      */
     private final long subscribeExpire = 5 * 60 * 1000;
+
 
     @FunctionalInterface
     public interface Event{
@@ -58,7 +61,7 @@ public class HookSubscribe {
         sendNotify(HookType.on_publish, event);
     }
     /**
-     * 推流鉴权事件
+     * 生成录像文件事件
      */
     @Async("taskExecutor")
     @EventListener
@@ -70,7 +73,7 @@ public class HookSubscribe {
     private final Map<String, Hook> allHook = new ConcurrentHashMap<>();
 
     private void sendNotify(HookType hookType, MediaEvent event) {
-        Hook paramHook = Hook.getInstance(hookType, event.getApp(), event.getStream(), event.getMediaServer().getId());
+        Hook paramHook = Hook.getInstance(hookType, event.getApp(), event.getStream());
         Event hookSubscribeEvent = allSubscribes.get(paramHook.toString());
         if (hookSubscribeEvent != null) {
             HookData data = HookData.getInstance(event);
@@ -79,8 +82,8 @@ public class HookSubscribe {
     }
 
     public void addSubscribe(Hook hook, HookSubscribe.Event event) {
-        if (hook.getCreateTime() == null) {
-            hook.setCreateTime(System.currentTimeMillis());
+        if (hook.getExpireTime() == null) {
+            hook.setExpireTime(System.currentTimeMillis() + subscribeExpire);
         }
         allSubscribes.put(hook.toString(), event);
         allHook.put(hook.toString(), hook);
@@ -96,12 +99,16 @@ public class HookSubscribe {
      */
     @Scheduled(fixedRate=subscribeExpire)   //每5分钟执行一次
     public void execute(){
-        long expireTime = System.currentTimeMillis() - subscribeExpire;
+        long expireTime = System.currentTimeMillis();
         for (Hook hook : allHook.values()) {
-            if (hook.getCreateTime() < expireTime) {
+            if (hook.getExpireTime() < expireTime) {
                 allSubscribes.remove(hook.toString());
                 allHook.remove(hook.toString());
             }
         }
+    }
+
+    public List<Hook> getAll() {
+        return new ArrayList<>(allHook.values());
     }
 }

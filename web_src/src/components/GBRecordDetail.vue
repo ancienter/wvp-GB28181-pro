@@ -30,13 +30,14 @@
 
       </el-aside>
 			<el-main style="padding-bottom: 10px;">
-        <div class="playBox" :style="playerStyle">
+        <div class="playBox" :style="playerBoxStyle">
           <player ref="recordVideoPlayer"
                   :videoUrl="videoUrl"
                   :error="videoError"
                   :message="videoError"
                   :hasAudio="hasAudio"
                   style="max-height: 100%"
+                  :height="playerHeight"
                   fluent autoplay live ></player>
         </div>
         <div class="player-option-box">
@@ -57,13 +58,13 @@
             </el-button-group>
 
             <el-button-group >
-              <el-button size="mini" class="iconfont icon-zanting" title="开始" @click="gbPause()"></el-button>
-              <el-button size="mini" class="iconfont icon-kaishi" title="暂停" @click="gbPlay()"></el-button>
+              <el-button size="mini" class="iconfont icon-zanting" title="暂停" @click="gbPause()"></el-button>
+              <el-button size="mini" class="iconfont icon-kaishi" title="开始" @click="gbPlay()"></el-button>
               <el-dropdown size="mini" title="播放倍速"  @command="gbScale">
                 <el-button size="mini">
                   倍速 <i class="el-icon-arrow-down el-icon--right"></i>
                 </el-button>
-                <el-dropdown-menu  slot="dropdown">
+                <el-dropdown-menu>
                   <el-dropdown-item command="0.25">0.25倍速</el-dropdown-item>
                   <el-dropdown-item command="0.5">0.5倍速</el-dropdown-item>
                   <el-dropdown-item command="1.0">1倍速</el-dropdown-item>
@@ -136,10 +137,11 @@
           overflow: "auto",
           margin: "10px auto 10px auto"
         },
-        playerStyle: {
+        playerBoxStyle: {
 			    "margin": "0 auto 20px auto",
           "height": this.winHeight + "px",
         },
+        playerHeight: this.winHeight,
         winHeight: window.innerHeight - 240,
         playTime: null,
         timeRange: null,
@@ -179,7 +181,7 @@
 		},
 		mounted() {
       this.recordListStyle.height = this.winHeight + "px";
-      this.playerStyle["height"] = this.winHeight + "px";
+      this.playerBoxStyle["height"] = this.winHeight + "px";
       this.chooseDate = moment().format('YYYY-MM-DD')
       this.dateChange();
       window.addEventListener('beforeunload', this.stopPlayRecord)

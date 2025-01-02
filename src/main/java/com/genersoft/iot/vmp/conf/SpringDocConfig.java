@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @Order(1)
+@ConditionalOnProperty(value = "user-settings.doc-enable", havingValue = "true", matchIfMissing = true)
 public class SpringDocConfig {
 
     @Value("${doc.enabled: true}")
@@ -48,7 +50,7 @@ public class SpringDocConfig {
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
                 .group("1. 全部")
-                .packagesToScan("com.genersoft.iot.vmp.vmanager")
+                .packagesToScan("com.genersoft.iot.vmp")
                 .build();
     }
 
@@ -56,7 +58,7 @@ public class SpringDocConfig {
     public GroupedOpenApi publicApi2() {
         return GroupedOpenApi.builder()
                 .group("2. 国标28181")
-                .packagesToScan("com.genersoft.iot.vmp.vmanager.gb28181")
+                .packagesToScan("com.genersoft.iot.vmp.gb28181")
                 .build();
     }
 
@@ -64,7 +66,7 @@ public class SpringDocConfig {
     public GroupedOpenApi publicApi3() {
         return GroupedOpenApi.builder()
                 .group("3. 拉流转发")
-                .packagesToScan("com.genersoft.iot.vmp.vmanager.streamProxy")
+                .packagesToScan("com.genersoft.iot.vmp.streamProxy")
                 .build();
     }
 
@@ -72,7 +74,7 @@ public class SpringDocConfig {
     public GroupedOpenApi publicApi4() {
         return GroupedOpenApi.builder()
                 .group("4. 推流管理")
-                .packagesToScan("com.genersoft.iot.vmp.vmanager.streamPush")
+                .packagesToScan("com.genersoft.iot.vmp.streamPush")
                 .build();
     }
 
@@ -80,7 +82,7 @@ public class SpringDocConfig {
     public GroupedOpenApi publicApi5() {
         return GroupedOpenApi.builder()
                 .group("4. 服务管理")
-                .packagesToScan("com.genersoft.iot.vmp.vmanager.server")
+                .packagesToScan("com.genersoft.iot.vmp.server")
                 .build();
     }
 
@@ -88,7 +90,7 @@ public class SpringDocConfig {
     public GroupedOpenApi publicApi6() {
         return GroupedOpenApi.builder()
                 .group("5. 用户管理")
-                .packagesToScan("com.genersoft.iot.vmp.vmanager.user")
+                .packagesToScan("com.genersoft.iot.vmp.user")
                 .build();
     }
 }

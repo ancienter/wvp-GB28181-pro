@@ -2,8 +2,7 @@ package com.genersoft.iot.vmp.conf;
 
 import com.genersoft.iot.vmp.media.bean.MediaServer;
 import com.genersoft.iot.vmp.utils.DateUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -13,12 +12,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.regex.Pattern;
 
-
+@Slf4j
 @Configuration("mediaConfig")
 @Order(0)
 public class MediaConfig{
-
-    private final static Logger logger = LoggerFactory.getLogger(MediaConfig.class);
 
     // 修改必须配置，不再支持自动获取
     @Value("${media.id}")
@@ -27,19 +24,19 @@ public class MediaConfig{
     @Value("${media.ip}")
     private String ip;
 
-    @Value("${media.hook-ip:}")
-    private String hookIp;
+    @Value("${media.wan_ip:}")
+    private String wanIp;
 
-    @Value("${sip.ip}")
-    private String sipIp;
+    @Value("${media.hook-ip:127.0.0.1}")
+    private String hookIp;
 
     @Value("${sip.domain}")
     private String sipDomain;
 
-    @Value("${media.sdp-ip:${media.ip}}")
+    @Value("${media.sdp-ip:${media.wan_ip:}}")
     private String sdpIp;
 
-    @Value("${media.stream-ip:${media.ip}}")
+    @Value("${media.stream-ip:${media.wan_ip:}}")
     private String streamIp;
 
     @Value("${media.http-port:0}")
@@ -111,20 +108,7 @@ public class MediaConfig{
     }
 
     public String getHookIp() {
-        if (ObjectUtils.isEmpty(hookIp)){
-            return sipIp;
-        }else {
-            return hookIp;
-        }
-
-    }
-
-    public String getSipIp() {
-        if (sipIp == null) {
-            return this.ip;
-        }else {
-            return sipIp;
-        }
+        return hookIp;
     }
 
     public int getHttpPort() {
@@ -192,7 +176,7 @@ public class MediaConfig{
                 try {
                     hostAddress = InetAddress.getByName(sdpIp).getHostAddress();
                 } catch (UnknownHostException e) {
-                    logger.error("[获取SDP IP]: 域名解析失败");
+                    log.error("[获取SDP IP]: 域名解析失败");
                 }
                 return hostAddress;
             }
@@ -295,5 +279,13 @@ public class MediaConfig{
             return Pattern.matches("^([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}$", ipAddress);
         }
         return false;
+    }
+
+    public String getWanIp() {
+        return wanIp;
+    }
+
+    public void setWanIp(String wanIp) {
+        this.wanIp = wanIp;
     }
 }

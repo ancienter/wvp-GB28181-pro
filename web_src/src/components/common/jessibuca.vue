@@ -1,6 +1,7 @@
 <template>
   <div ref="container" @dblclick="fullscreenSwich"
        style="width:100%; height: 100%; background-color: #000000;margin:0 auto;position: relative;">
+    <div style="width:100%; padding-top: 56.25%; position: relative;"></div>
     <div class="buttons-box" id="buttonsBox">
       <div class="buttons-box-left">
         <i v-if="!playing" class="iconfont icon-play jessibuca-btn" @click="playBtnClick"></i>
@@ -66,6 +67,9 @@ export default {
   //   });
   //   ro.observe(this.$refs.container);
   // },
+  mounted(){
+    this.updatePlayerDomSize();
+  },
   watch: {
     videoUrl: {
       handler(val, _) {
@@ -91,6 +95,7 @@ export default {
       if (width > 0 && height > 0) {
         dom.style.width = width + 'px';
         dom.style.height = height + "px";
+        dom.style.paddingTop = 0;
         console.log(width)
         console.log(height)
       }
@@ -133,7 +138,7 @@ export default {
         supportDblclickFullscreen: false,
         timeout: 10,
         useMSE: true,
-        useWCS: location.hostname === "localhost" || location.protocol === "https:",
+        useWCS: false,
         useWebFullScreen: true,
         videoBuffer: 0.1,
         wasmDecodeErrorReplay: true,
